@@ -1,0 +1,2122 @@
+---
+title: "**STAT 411 Final Project**"
+author: "Jimi Abbott"
+date: "2024-04-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+\tableofcontents
+\newpage
+
+# Introduction
+
+Golf, at an overview, is a sport with a very simple goal: get the ball in the hole in as little strokes (hits) as possible. However, there are many different factors that lead to a score that a player can get, not only through an entire round but by each individual hole. In this project, I will aim to explore how strategy influences a golfer's performance. The idea is the following: a golfer is allowed 14 clubs in their bag. These clubs range in length, and the longer a club is, the farther it can be hit. However, golf is a very precise and difficult game. So, as the club increases in length, a golfer's precision and accuracy with the club typically decreases. Some holes require more precision or present more danger than others, and instead of opting to go hit their longest club from the tee, a golfer might choose to hit something shorter to keep it in play. This seems like a simple decision to make, but choosing the "keep it in play" club will leave the golfer with a longer approach into the green than if they were to hit a good driver. This longer approach is hypothetically more difficult than the shorter approach. So, is there a "right" decision to make on any given hole? Is there a strategy we should employ by round?
+
+In this project, I am an independent researcher. I am sponsored by Rice Club Golf, who is giving me $500 to help pay for the rounds of people who need/want financial support. They want to work with me to learn from this experiment so our team can improve and compete more moving forward. I will try to start social media and post about my project and its progress, eventually posting about my findings. This will garner more attention, which is good, because I'd like as many people as possible to learn. Also, if it gets enough attention, maybe we can expand the project in the future to include more participants and maybe get more opinions and other things we could experiment about.
+
+I'm someone who cares about this experiment because it's interesting and I think it might help me strategize better by comparing my golfing archetype with those who are a part of the experiment. I am an above average golfer myself, but I feel like I am definitely close to scoring a lot better than I am now, so this experiment will hopefully help me branch out my thought process. I am also on the Rice Club Golf team, and I'm looking to improve myself strategically before tournaments start up in the fall again.
+
+For this experiment, we're gonna get 36 different golfers. 12 that have a handicap index around 0, 12 that have a handicap index around 10, and 12 that have a handicap index around 20. The group will all play the same course on the same day, hopefully twice. We will be choosing a course that isn't too busy so that we are able to make tee times in advance without the worry of all times being filled too quickly. All of this group will be those that do not work on weekends, and are available enough to be able to set aside a few hours once a month to play a round. There will be three different strategies, and each golfer will get to play all three strategies over these three rounds.
+
+# Design
+
+The response, or the Y, will be the golfer's overall score for the round. We are going to give golfers three different "treatments":
+
+1. Aggressive - Hit driver off the tee on every par 4/par 5 unless it is pretty much impossible.
+
+2. Neutral - Hit driver a good amount, but not if it's too risky of a play.
+
+3. Conservative - Only hit driver when it's very safe, focus on keeping the ball in play.
+
+## Golfers
+
+We will be choosing golfers from three different skill levels. Our first group of golfers will have a handicap index near 0, our next group of golfers will have a handicap index near 10, and our next group of golfers will have a handicap index near 20. There a couple reasons behind aiming towards choosing from three different relative skill levels. The first one is the fact that different skill levels of golfers play the game very differently. It's hard to compare 2 players where one is typically expecting to take 4 shots to reach the green on a par 5 while the other is hoping to reach it in 2. It's just a different game. This leads into another reason which is that we want to examine if certain strategies are more beneficial for one skill level compared to another.
+
+## The Layout
+
+We are going to get 12 different golfers from each of the 3 skill levels. We are going to assign each of them to a "treatment", or in this case a strategy. Look at this table to get the idea of what our data will look like after we collect it:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Score (Y) & Strategy & Handicap & Golfer \\
+\hline
+$Y_{111}$ & 1 & 1 & 1 \\
+\hline
+$\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+$Y_{334}$ & $3$ & $3$ & $4$ \\
+\hline
+\end{tabular}
+\end{center}
+
+So, within each block we have 12 golfers. Those golfers will have 3 different strategies. So, within each group of 12 every golfer will be randomly assigned to a strategy, with 4 golfers per strategy. We will have 36 total observations for one round, and subsequently 72 total observations.
+
+# Basis for Golfer Attributes
+
+The idea behind generating different attributes for each golfer is that while two golfers may be on the same skill level overall, the levels of each individual part of their game might be different. For this experiment, I'll be creating a number of attributes that is complex enough to provide good coverage, but not too many attributes because then data generation may become too complex. The attributes assigned will be the following:
+
+Putting: Putting skill will influence a golfer's likelihood of making any given putt along with their ability to hit putts close. For example, given a 50 foot putt and a golfer with a high putting rating and a golfer with a low putting rating, the 1st golfer may tend to take 2 putts from this distance while the 2nd golfer may tend closer to 3. We expect a professional golfer to make around 98-99% of putts from 3 feet, but a golfer that we give a low putting rating might only make 60-70% of such putts.
+
+Chipping: A chip shot is any shot around/close to the green. These shots vary highly in difficulty, and we won't be able to fully capture this variability through simulation. But, we can hopefully capture this variability as much as we can as we get more shots. Chipping is a skill that varies more among golf than I'd say another shot. The precision of the strike causes many average/below average golfers to have wildly inconsistent results.
+
+Approach: An approach is any shot from 30 - 250 yardsish. This is a long range of shots, but it would get far too complicated for our data generation if we were to split this up. Like chipping, these shots vary highly in difficulty. This skill influences a golfer's ability to get on/around the green when they have the opportunity to.
+
+Driving: Driving is a players ability to be accurate and have good distance with their tee shots on par 4s and par 5s. A good driver of the golf ball will be able to hit fairways, hit long drives, and stay away from penalties like water and out of bounds for the most part.
+
+# Golf Course
+
+I'd like to choose a golf course that I can get people I know on and have these people mostly be willing to pay for the round a couple times. This golf course will be Tony Butler Golf Course in Harlingen, TX, which is my hometown. It is a decent, cheap municipal golf course that provides a good challenge with several risk-reward opportunities off the tee. It doesn't get too much traffic, which makes it feasible for us to get a decently sized group of golfers out there once a month. With 36 golfers, we'll be able to make tee times in advance and get 9 groups of 4 people out on a weekend, given that the course can probably support around 70 groups a day.
+
+# Data Generation
+
+Generating data for this experiment will be challenging. We want to make the results as realistic as possible without making the generation process too complex. Here's the layout:
+
+## Golfer Attributes
+
+Every golfer is different. They each have different skill levels for different parts of their game, even if their overall skill level is the same. So, what we've decided to do is generate different attributes for each golfer randomly: putting, chipping, approach shots, and driving. This captures most of the skills of the golfer without being too specific as to introduce some complexity that we can't figure out how to work with. Average skills for handicap 0 golfers will be very similar to each other, then handicap 10 golfers will have lower skill levels, and handicap 20 golfers will have lower skill levels.
+
+We've chosen a real golf course to use for our experiment. It's not only a good course to think about strategy on, but it's also a course I know better than any course in the world so I can provide accurate depictions of what we'd expect. I have played it hundreds of times over the last 8 years. Each hole will have its own function, and golfers will "play" each hole one at a time. The difficulties of the different shots will vary by hole, and the difficulties of shots based on strategies will vary by hole. Our algorithm will be similar hole to hole, but changes will be made base of the characteristics of any given hole. It's not reasonable to capture the variability and nuances within a round by trying to do all 18 holes at once, so it's in the best interest of the integrity of our experiment that each hole is considered its own entity.
+
+## Golfer Attribute Generation
+
+``` {r}
+
+set.seed(20240418) # For reproducibility
+
+generate_golfer <- function(handicap) {
+  if(handicap == 0) {
+    total_skill_points <- 330
+  }
+  if(handicap == 10) {
+    total_skill_points <- 150
+  }
+  if(handicap == 20) {
+    total_skill_points <- 50
+  }
+  base_skill <- total_skill_points / 4 # Base skill for each attribute
+  
+  # Randomly distribute the remaining skill points among the four skills
+  skill_distribution <- runif(4, min = 0.5, max = 0.875)
+  skill_distribution <- skill_distribution / sum(skill_distribution) # Normalize to sum to 1
+  
+  # Allocate skills based on the base skill and the random distribution
+  skills <- base_skill/2 + (total_skill_points * 0.25 * skill_distribution)
+  
+  return(skills)
+}
+
+# Generate data for 36 golfers
+golfers <- data.frame(matrix(ncol = 5, nrow = 72))
+names(golfers) <- c("Handicap", "Driving", "Approach", "Chipping", "Putting")
+
+handicaps <- c(rep(0, 12), rep(10, 12), rep(20, 12))
+
+# Generate data for 36 golfers with updated skills distribution
+for (i in 1:36) {
+  golfers[i,] <- c(handicaps[i], generate_golfer(handicaps[i]))
+}
+
+golfers[37:72,] <- golfers[1:36,]
+
+# Assign strategies
+strategies <- rep(c("Aggressive", "Neutral", "Conservative"), 12)
+strategies2 <- rep(c("Neutral", "Aggressive", "Conservative"), 12)
+golfers$Strategy <- c(strategies, strategies2)
+
+golfers$Golfer <- 1:72
+golfers$Golfer[37:72] <- 1:36
+
+```
+
+``` {r, echo = FALSE}
+
+mean_attributes <- 1:36
+
+for(i in 1:36) {
+  mean_attributes[i] <- mean(golfers$Driving[i], golfers$Approach[i], golfers$Chipping[i], golfers$Putting[i])
+}
+
+colorAttributes <- rep(c("red", "blue", "green"), each = 12)
+
+plot(mean_attributes, col = colorAttributes, ylab = "Level", main = "Driving Skill")
+legend("topright", legend = c("Hcp 0", "Hcp 10", "Hcp 20"), col = c("red", "green", "blue"), pch = c(1, 1, 1))
+
+```
+
+As we see from this plot, individual skill varies among golfers.
+
+``` {r, echo = FALSE}
+
+mean_attributes <- 1:36
+
+for(i in 1:36) {
+  mean_attributes[i] <- mean(c(golfers$Driving[i], golfers$Approach[i], golfers$Chipping[i], golfers$Putting[i]))
+}
+
+colorAttributes <- rep(c("red", "blue", "green"), each = 12)
+
+plot(mean_attributes, col = colorAttributes, ylab = "Level", main = "Average Attributes by Golfer")
+legend("topright", legend = c("Hcp 0", "Hcp 10", "Hcp 20"), col = c("red", "green", "blue"), pch = c(1, 1, 1))
+
+```
+
+As we see from this plot, average attributes are the same at each relative skill level.
+
+## Simulation
+
+### Hole 1
+
+Hole 1 is a 490 yard par 5 that typically forces driver out of your hands on the tee shot. There's a water hazard that comes into play to the right at around 250 yards and cuts through the middle of the hole around 270 yards from the tee. It extends all the way to the end of the hole, ending up on the left side of the hole after cutting through the middle. This is a hole that can be scored well on if played well, but it can also be easily messed up. The tee shot requires a lot of precision in order to have an easy 2nd shot over the water. Players that hit a bad tee shot and get too greedy can easily make a big score here.
+
+``` {r}
+
+simulate_hole_1 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 5 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 0.8
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.0
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.75
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.2 & driving_skill > 60 & strategy == "Aggressive") { # Assuming 20% chance to hit water if missed fairway for 0 handicap golfer
+        score <- score + 1 # Additional penalty for water
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.2 & driving_skill > 60 & strategy == "Aggressive") { # Out of bounds left, 20% chance
+        score <- score + 2
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Neutral") { # Out of bounds left, 20% chance
+        score <- score + 2
+      }
+      if (runif(1) < 0.3 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.5 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.8
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.8
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.6
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.7
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.2
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+golfers$score <- 1:72
+golfers$fairway <- 1:72
+golfers$gir <- 1:72
+golfers$putts <- 1:72
+
+for(i in 1:72) {
+  hole1score <- simulate_hole_1(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- hole1score$Score
+  golfers$fairway[i] <- ifelse(hole1score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- ifelse(hole1score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- hole1score$Putts
+}
+
+```
+
+### Hole 2
+
+Hole 2 is a 150 yard par 3 that is fairly straightforward. Bunkers sit left and right of the green, making a good score difficult if missing in those places. But, any shot with good direction, even if it's slightly short or long, makes the hole pretty simple.
+
+``` {r}
+
+simulate_hole_2 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 3 # Starting score is par for the hole
+  
+  approach_difficulty <- 1.1
+  
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole2score <- simulate_hole_2(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole2score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole2score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole2score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole2score$Putts
+}
+
+```
+
+### Hole 3
+
+Hole 3 is a 500 yard par 5 that is relatively narrow and plays typically with a hurting wind. A tee shot left can end up in the water hazard, while a tee shot right can end up out of bounds or in the trees. If a good drive is hit, the hole after is easy, but it is not an easy drive. (From now on we'll exclude code in report to shorten length, will still upload rmd with project so all code can be seen.)
+
+``` {r, include = FALSE}
+
+simulate_hole_3 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 5 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.1
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.6
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.9
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.2 & driving_skill > 60 & strategy == "Aggressive") { # Assuming 20% chance to hit water if missed     fairway for 0 handicap golfer
+        score <- score + 1 # Additional penalty for water
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.3 & driving_skill > 60 & strategy == "Aggressive") { # Out of bounds right, 20% chance
+        score <- score + 2
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.7 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Neutral") { # Out of bounds right, 20% chance
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.6
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.1
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.8
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.2
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.4
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole3score <- simulate_hole_3(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole3score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole3score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole3score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole3score$Putts
+}
+
+```
+
+### Hole 4
+
+Hole 4 is a 400 yard par 4 that is also relatively narrow and plays typically with a hurting wind. A precise drive is required as anything right or left will typically lead to it being very difficult to make a good score. The green is protected by two bunkers, one short right and one long left, so a precise approach is required. This is typically one of the more difficult holes on the course that requires several high-quality golf shots.
+
+``` {r, include = FALSE}
+
+simulate_hole_4 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.3
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.8
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.1
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.2 & driving_skill > 60 & strategy == "Aggressive") { # Out of bounds
+        score <- score + 2
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.05 & driving_skill > 60 & strategy == "Neutral") { # Out of bounds
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 25 & driving_skill < 60 & strategy == "Conservative") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.9
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.1
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.9
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.4
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.8
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 4.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole4score <- simulate_hole_4(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole4score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole4score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole4score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole4score$Putts
+}
+
+```
+
+### Hole 5
+
+Hole 5 is a 390 yard par 4 that bends to the left. There is room to miss to the right, but doing so makes the approach longer and more difficult. If the player gets greedy and goes too far left on the drive, they can easily go out of bounds. A tee shot in play makes the hole fairly reasonable, but the wind hurting may make for a long approach.
+
+``` {r, include = FALSE}
+
+simulate_hole_5 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 0.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.9
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.5
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.2 & driving_skill > 60 & strategy == "Aggressive") {
+      score <- score + 2 # 
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.5 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.6
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.0
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.6
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.8
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.6
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.4
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole5score <- simulate_hole_5(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole5score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole5score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole5score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole5score$Putts
+}
+
+```
+
+### Hole 6
+
+Hole 6 is a 190 yard par 3 where the wind swirls, making it fairly difficult to get the distance correct. Missing it too far left can leave the player in a bunker or even in the hazard, while missing right is also a hazard. The hole requires a high-quality shot from a pretty long distance, making it challenging.
+
+``` {r, include = FALSE}
+
+simulate_hole_6 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 3 # Starting score is par for the hole
+  
+  approach_difficulty <- 2.5
+  
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    if (0.3 < runif(1)) {
+      score <- score + 1
+    }
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole6score <- simulate_hole_6(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole6score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole6score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole6score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole6score$Putts
+}
+
+```
+
+### Hole 7
+
+Hole 7 is a 360 yard par 4 that is straightaway. However, any miss to the right is out of bounds. A driver can get close to the green, but it is a big risk. It is a fairly easy hole with an accurate tee shot.
+
+``` {r, include = FALSE}
+
+simulate_hole_7 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 0.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.6
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.3
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.4 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 2 # 
+      }
+      if (runif(1) < 0.5 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.7 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Neutral") {
+        score <- score + 2 # 
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.4 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.05 & driving_skill > 60 & strategy == "Conservative") {
+        score <- score + 2 # 
+      }
+      if (runif(1) < 0.1 & driving_skill > 30 & driving_skill < 60 & strategy == "Conservative") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill < 30 & strategy == "Conservative") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.2
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 0.7
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.1
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.6
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.2
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.5
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole7score <- simulate_hole_7(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole7score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole7score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole7score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole7score$Putts
+}
+
+```
+
+### Hole 8
+
+Hole 8 is a 370 par 4 that has water just right of the fairway, but a ton of room to the left. A player that tries to smash a driver can get rewarded if done well, but this player can also easily end up in the water if they get too greedy. Missing left is fine, but it leaves a longer approach since the hole tends to the right.
+
+``` {r, include = FALSE}
+
+simulate_hole_8 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 0.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.7
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.4
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.5 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.5 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.5 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Conservative") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Conservative") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Conservative") {
+        score <- score + 1
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.5
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 0.8
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.2
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.2
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.6
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole8score <- simulate_hole_8(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole8score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole8score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole8score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole8score$Putts
+}
+
+```
+
+### Hole 9
+
+Hole 9 is a 420 yard par 4 that plays into the wind and bends to the left. It is one of the most difficult holes on the course, if not the most difficult. It plays very long, and the hole bottlenecks towards the green. There is room to the left, but out of bounds hugs close to the right side of the fairway.
+
+``` {r, include = FALSE}
+
+simulate_hole_9 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.9
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.2
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.5
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.10) { # Assuming 10% chance to out of bounds if missed fairway
+        score <- score + 2 # Additional penalty
+      }
+  }
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.6
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 2.0
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.2
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 2.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 2.4
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.8
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole9score <- simulate_hole_9(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole9score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole9score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole9score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole9score$Putts
+}
+
+```
+
+### Hole 10
+
+Hole 10 is a 125 yard par 3 where the wind swirls. It may be an easy shot for the eye and a short club, but it has been proven to be difficult to get the distance right. Long of the green leaves an impossible chip, and a bunker protects the hole short right.
+
+``` {r, include = FALSE}
+
+simulate_hole_10 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 3 # Starting score is par for the hole
+  
+  approach_difficulty <- 1.2
+  
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole10score <- simulate_hole_10(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole10score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole10score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole10score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole10score$Putts
+}
+
+```
+
+### Hole 11
+
+Hole 11 is a 400 yard par 4 that typically plays downwind. A good drive leaves a reasonable approach. However, water hugs the fairway left and anything that lands around there tends toward the water. Missing right off the tee is fine, but if you hit it far enough water comes into play. On the approach shot, water is in play to the right of the green.
+
+``` {r, include = FALSE}
+
+simulate_hole_11 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.3
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.2
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.5
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.4 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.5 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Neutral") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.4 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.05 & driving_skill > 60 & strategy == "Conservative") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.1 & driving_skill > 25 & driving_skill < 60 & strategy == "Conservative") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.15 & driving_skill < 30 & strategy == "Conservative") {
+        score <- score + 1
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.5
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.2
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.6
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.5
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.2
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole11score <- simulate_hole_11(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole11score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole11score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole11score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole11score$Putts
+}
+
+```
+
+### Hole 12
+
+Hole 12 is a 390 yard par 4 that typically plays into the wind. The drive isn't difficult, but missing left or right just leaves one with a more difficult approach. The green falls off to the left and to the right, with there being a hazard on the right. A precise approach is required.
+
+``` {r, include = FALSE}
+
+simulate_hole_12 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 0.8
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 1.0
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.7
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.05 & driving_skill > 60) {
+        score <- score + 1 
+      }
+      if (runif(1) < 0.1 & driving_skill > 25 & driving_skill < 60) {
+        score <- score + 1
+      }
+      if (runif(1) < 0.5 & driving_skill < 25) {
+        score <- score + 1
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.3
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.7
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.1
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.7
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.9
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.4
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole12score <- simulate_hole_11(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole12score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole12score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole12score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole12score$Putts
+}
+
+```
+
+### Hole 13
+
+Hole 13 is a 540 yard par 5. Golfers are typically forced to layup to around 150 yards on their second shot because their is a big drop off after that. Being in this drop off means the green is super far above you, which is not ideal. The tee shot isn't too important as one will likely not be able to hit a 2nd shot far no matter what position they're in.
+
+``` {r, include = FALSE}
+
+simulate_hole_13 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 5 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.0
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.5
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+    if (runif(1) < 0.1) { # Assuming 10% chance to hit water if missed fairway
+      score <- score + 1 # Additional penalty for water
+    }
+  }
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.4
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.7
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.3
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.4
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 2.0
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 3.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole13score <- simulate_hole_13(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole13score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole13score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole13score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole13score$Putts
+}
+
+```
+
+### Hole 14
+
+Hole 14 is a dogleg left par 4 around 380 yards where fairway is key. Trees that hug the fairway on both sides make the hole very difficult if the fairway is missed. The approach shot is straight forward with a good drive.
+
+``` {r, include = FALSE}
+
+simulate_hole_14 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.8
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 3.0
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.5
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+    if (runif(1) < 0.05 & driving_skill > 60) {
+      score <- score + 2 # 
+    }
+    if (runif(1) < 0.25 & driving_skill > 25 & driving_skill < 60) {
+      score <- score + 2
+    }
+    if (runif(1) < 0.5 & driving_skill < 25) {
+      score <- score + 2
+    }
+  }
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.5
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 0.9
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.0
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 2.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 4.0
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 4.5
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole14score <- simulate_hole_14(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole14score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole14score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole14score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole14score$Putts
+}
+
+```
+
+### Hole 15
+
+Hole 15 is a 170 yard par 3 over water. Wind pushes left, and it typically makes this hole more challenging. Misses that go a little bit too far left can get a bad kick and end up in real trouble. Bunkers protect the green short right and long left.
+
+``` {r, include = FALSE}
+
+simulate_hole_15 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 3 # Starting score is par for the hole
+  
+  approach_difficulty <- 1.9
+  
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    if (runif(1) < 0.40) {
+      score <- score + 1
+    }
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole15score <- simulate_hole_10(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole15score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole15score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole15score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole15score$Putts
+}
+
+```
+
+### Hole 16
+
+Hole 16 is a 325 yard par 4 that can be driven/or nearly driven in 1 shot. However, misses too far left or right can leave the player handcuffed with a tricky approach. Driver is a risky and inconsistent play, but putting a shorter club in the fairway leaves the golfer with a straightforward approach.
+
+``` {r, include = FALSE}
+
+simulate_hole_16 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.0
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.5
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 0.9
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.3 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 1 
+      }
+      if (runif(1) < 0.4 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.5 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.05 & driving_skill > 60 & strategy == "Neutral") {
+        score <- score + 1 
+      }
+      if (runif(1) < 0.15 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 1
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 1
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 0.2
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 0.7
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 0.8
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.5
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 3.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole16score <- simulate_hole_16(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole16score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole16score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole16score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole16score$Putts
+}
+
+```
+
+### Hole 17
+
+Hole 17 is a challenging 410 yard par 4, where water comes into play on the left on the tee shot and on the right on the approach shot. It requires two quality shots for a good score. There is room to miss the fairway to the right, but it leaves a long second shot in.
+
+``` {r, include = FALSE}
+
+simulate_hole_17 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.8
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.0
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.4 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.5 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.6 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.0
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.3
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 2.4
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.5
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 2.0
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 3.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    if (runif(1) < 0.4) {
+      score <- score + 1
+    }
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole17score <- simulate_hole_17(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole17score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole17score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole17score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole17score$Putts
+}
+
+```
+
+### Hole 18
+
+Hole 18 is a challenging uphill 430 yard par 4 that typically plays into the wind. Bad misses to the left will go out of bounds, while missing right of the fairway leaves such a long approach that par is almost impossible. A tee shot down the middle leaves a relatively straightforward approach.
+
+``` {r, include = FALSE}
+
+simulate_hole_18 <- function(driving_skill, approach_skill, chipping_skill, putting_skill, strategy) {
+  # Initialize outcomes
+  hit_fairway <- FALSE
+  hit_GIR <- FALSE
+  putts <- 2 # Base assumption for putts
+  score <- 4 # Starting score is par for the hole
+  
+  # Adjust driving difficulty based on strategy
+  driving_difficulty <- 1.7
+  if (strategy == "Aggressive") {
+    driving_difficulty <- 2.5
+  } else if (strategy == "Conservative") {
+    driving_difficulty <- 1.2
+  }
+  
+  # Simulate tee shot
+  tee_shot_success <- runif(1) < (driving_skill / 100) / driving_difficulty
+  if (tee_shot_success) {
+    hit_fairway <- TRUE
+  } else {
+      if (runif(1) < 0.1 & driving_skill > 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.2 & driving_skill > 25 & driving_skill < 60 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.5 & driving_skill < 25 & strategy == "Aggressive") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.05 & driving_skill > 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.1 & driving_skill > 25 & driving_skill < 60 & strategy == "Neutral") {
+        score <- score + 2
+      }
+      if (runif(1) < 0.3 & driving_skill < 25 & strategy == "Neutral") {
+        score <- score + 2
+      }}
+  
+  # Simulate approach shot, more difficult if tee shot was unsuccessful
+  if(hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 1.2
+  }
+  if(hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 1.5
+  }
+  if(hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 1.8
+  }
+  if(!hit_fairway & strategy == "Aggressive") {
+    approach_difficulty <- 2.0
+  }
+  if(!hit_fairway & strategy == "Neutral") {
+    approach_difficulty <- 3.5
+  }
+  if(!hit_fairway & strategy == "Conservative") {
+    approach_difficulty <- 4.0
+  }
+  approach_success <- runif(1) < (approach_skill / 100) / approach_difficulty
+  if (approach_success) {
+    hit_GIR <- TRUE
+  }
+  else {
+    chip_success <- runif(1) < (chipping_skill / 100)
+    if (!chip_success) {
+      # Additional penalty if chipping is unsuccessful
+      score <- score + 1
+    }}
+  # Simulate putting, more putts if GIR was hit
+  if (hit_GIR) {
+    putts <- sample(1:3, 1, prob = c((1 - putting_skill / 100)/2, putting_skill / 100, (1 - putting_skill / 100)/2))}
+  else {
+    putts <- sample(1:2, 1, prob = c(putting_skill / 100, 1 - putting_skill / 100))
+  }
+  score <- score - 2 + putts # Adjust score based on total putts
+  
+  return(list(Score = score, Fairway = hit_fairway, GIR = hit_GIR, Putts = putts))
+}
+
+for(i in 1:72) {
+  hole18score <- simulate_hole_18(golfers[i, 2], golfers[i, 3], golfers[i, 4], golfers[i, 5], golfers[i, 6])
+  golfers$score[i] <- golfers$score[i] + hole18score$Score
+  golfers$fairway[i] <- golfers$fairway[i] + ifelse(hole18score$Fairway == TRUE, 1, 0)
+  golfers$gir[i] <- golfers$gir[i] + ifelse(hole18score$GIR == TRUE, 1, 0)
+  golfers$putts[i] <- golfers$putts[i] + hole18score$Putts
+}
+
+```
+
+# Budget Problem
+
+Unfortunately, we ran into a budget problem. More golfers than we expected required financial assistance for the 1st part of our experiment (we spent $350 on the first part), so we weren’t left with enough funds to conduct the full experiment a 2nd time. We decided to remove 20 handicap golfers for our 2nd run to be able to do the experiment again, since they were the majority that required financial assistance. This will definitely hurt our project but we are still interested in getting as much out of it as we can.
+
+``` {r, include = FALSE}
+
+golfersRemoved1 <- golfers[1:36, ]
+golfersRemoved2 <- golfers[37:60, ]
+
+```
+
+# Results of Experiment 1
+
+``` {r, include = FALSE}
+
+muhat1 <- mean(golfersRemoved1$score)
+
+meanblock1 <- 1:3
+meanblock1[1] <- mean(golfersRemoved1$score[1:12])
+meanblock1[2] <- mean(golfersRemoved1$score[13:24])
+meanblock1[3] <- mean(golfersRemoved1$score[25:36])
+
+meanstrat1 <- 1:3
+meanstrat1[1] <- mean(golfersRemoved1$score[golfersRemoved1$Strategy == "Aggressive"])
+meanstrat1[2] <- mean(golfersRemoved1$score[golfersRemoved1$Strategy == "Neutral"])
+meanstrat1[3] <- mean(golfersRemoved1$score[golfersRemoved1$Strategy == "Conservative"])
+
+```
+
+``` {r, echo = FALSE}
+
+plot(c(0, 10, 20), meanblock1, col = c("red", "blue", "green"), pch = 19, xlab = "Handicap Index", ylab = "Score", main = "Average Score by Handicap Index", type = "b")
+abline(muhat1, 0, lty = 2, lwd = 2)
+legend("topleft", lty = 2, legend = c("Overall Mean"), lwd = 2)
+
+```
+
+As expected, as handicap index increases, we see score increase.
+
+``` {r, echo = FALSE}
+
+plot(c(1, 2, 3), meanstrat1, col = c("red", "blue", "green"), pch = 19, xlab = "Strategy", ylab = "Score", main = "Average Score by Strategy", type = "b")
+abline(muhat1, 0, lty = 2, lwd = 2)
+legend("topright", lty = 2, legend = c("Overall Mean"), lwd = 2)
+legend("bottomleft", pch = 19, col = c("red", "blue", "green"), legend = c("Aggressive", "Neutral", "Conservative"))
+
+```
+
+This plot shows average score by strategy. Aggressive golfers averaged in the 87 - 88 range, which is well above the overall mean, while neutral and conservative golfers fared pretty strongly comparatively.
+
+``` {r, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(golfersRemoved1, aes(x = factor(Strategy), y = score), col = factor(Strategy)) +
+    geom_violin(trim = FALSE) +
+    geom_jitter(width = 0.2) +
+    labs(title = "Score Distribution by Strategy",
+         x = "Strategy",
+         y = "Score") +
+    theme_minimal()
+
+```
+
+This is a combination of violin plots and a scatter plot that shows the distribution of scores among each strategy. We see that the conservative strategy yields the most consistent scores while the aggressive strategy yields the most variant scores.
+
+``` {r, include = FALSE}
+
+mean11 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Aggressive"])
+mean12 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Neutral"])
+mean13 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Conservative"])
+mean21 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Aggressive"])
+mean22 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Neutral"])
+mean23 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Conservative"])
+mean31 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Aggressive"])
+mean32 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Neutral"])
+mean33 <- mean(golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Conservative"])
+
+```
+
+``` {r, echo = FALSE}
+
+plot(1:3, c(mean11, mean12, mean13), type = "b", pch = 19, col = "red", xlab = "Strategy (1 = Agg., 2 = Neutral, 3 = Cons.)", ylab = "Average Score", ylim = c(70, 105), main = "Means Plot")
+lines(1:3, c(mean21, mean22, mean23), type = "b", pch = 19, col = "blue")
+lines(1:3, c(mean31, mean32, mean33), type = "b", pch = 19, col = "green")
+legend("topright", legend = c("Hcp 0", "Hcp 10", "Hcp 20"), col = c("red", "blue", "green"), pch = 19)
+
+```
+
+This plot shows averages at each of the combinations of handicaps and strategies. It seems that for 20 handicap golfers, the aggressive approach was quite a struggle. This could be due to the fact that for these golfers, lack of consistency and accuracy lead to a lot of penalty shots. Overall, the neutral/conservative approach was best for all groups.
+
+``` {r, include = FALSE}
+
+meanij1 <- c(mean11, mean12, mean13, mean21, mean22, mean23, mean31, mean32, mean33)
+
+ssto <- sum((golfersRemoved1$score - muhat1)**2)
+
+sse <- sum((golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Aggressive"] - meanij1[1])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Neutral"] - meanij1[2])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 0 & golfersRemoved1$Strategy == "Conservative"] - meanij1[3])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Aggressive"] - meanij1[4])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Neutral"] - meanij1[5])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 10 & golfersRemoved1$Strategy == "Conservative"] - meanij1[6])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Aggressive"] - meanij1[7])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Neutral"] - meanij1[8])**2) + sum((golfersRemoved1$score[golfersRemoved1$Handicap == 20 & golfersRemoved1$Strategy == "Conservative"] - meanij1[9])**2)
+
+ssa <- 12 * sum((meanblock1 - muhat1)**2)
+ssb <- 12 * sum((meanstrat1 - muhat1)**2)
+
+ssab <- sum((meanij1[1] - meanblock1[1] - meanstrat1[1] + muhat1)**2) + sum((meanij1[2] - meanblock1[1] - meanstrat1[2] + muhat1)**2) + sum((meanij1[3] - meanblock1[1] - meanstrat1[3] + muhat1)**2) + sum((meanij1[4] - meanblock1[2] - meanstrat1[1] + muhat1)**2) + sum((meanij1[5] - meanblock1[2] - meanstrat1[2] + muhat1)**2) + sum((meanij1[6] - meanblock1[2] - meanstrat1[3] + muhat1)**2) + sum((meanij1[7] - meanblock1[3] - meanstrat1[1] + muhat1)**2) + sum((meanij1[8] - meanblock1[3] - meanstrat1[2] + muhat1)**2) + sum((meanij1[9] - meanblock1[3] - meanstrat1[3] + muhat1)**2)
+ssab <- 4 * ssab
+
+msa <- ssa / 2
+msb <- ssb / 2
+msab <- ssab / 4
+mse <- sse / 27
+
+```
+
+## Test for Interaction
+
+``` {r}
+
+msab/mse
+
+qf(p = 0.0167, df1 = 4, df2 = 27, lower.tail = FALSE)
+
+```
+
+The interaction between handicap and strategy in this experiment is not statistically significant using a p-value of 0.05/3. It was close. We think that strategy had a bigger impact on 20 handicappers than others based on our previous visualizations, but not quite enough.
+
+## Test for Handicap
+
+``` {r}
+
+msa/mse
+
+qf(p = 0.0167, df1 = 2, df2 = 27, lower.tail = FALSE)
+
+```
+
+The handicap is obviously a very significant factor in determining score.
+
+## Test for Strategy
+
+``` {r}
+
+msb/mse
+
+qf(p = 0.0167, df1 = 2, df2 = 27, lower.tail = FALSE)
+
+```
+
+Strategy is a significant factor in regards to score. This is a valuable result to us, and a justified decision based on previous discussion.
+
+## Source of Variation Table
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Source & SS & df & MS \\
+\hline
+Handicap & 2424.06 & 2 & 1212.03 \\
+\hline
+Strategy & 421.56 & 2 & 210.78 \\
+\hline
+Interaction & 197.78 & 4 & 49.44 \\
+\hline
+Error & 396.25 & 27 & 14.68 \\
+\hline
+Total & 3439.64 & 35 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+## Visual Analysis
+
+``` {r, echo = FALSE}
+
+plot(golfersRemoved1$score, col = rep(c("red", "blue", "green"), 12), ylim = c(60, 110), pch = 19, xlab = "Golfer", ylab = "Score", main = "Scores Plot")
+legend("topleft", col = c("red", "blue", "green"), pch = 19, legend = c("Aggressive", "Neutral", "Conservative"))
+abline(v = 12.5, lty = 2)
+abline(v = 24.5, lty = 2)
+
+```
+
+Looking at individual scores that are split into 3 groups by handicap, we see a big visual difference in 20 handicap results vs. other results. The 20 handicap results give us a lot of evidence that the aggressive strategy was very difficult for these golfers and that the conservative strategy was best for them. The separation of points is much greater than those in the other 2 groups.
+
+## Residual Analysis
+
+``` {r, include = FALSE}
+
+fitted <- c(rep(c(mean11, mean12, mean13), 4), rep(c(mean21, mean22, mean23), 4), rep(c(mean31, mean32, mean33), 4))
+
+```
+
+``` {r, echo = FALSE}
+
+plot(golfersRemoved1$score - fitted, xlab = "Golfer", ylab = "Residuals", main = "Overall Residual Plot", ylim = c(-10, 10))
+abline(h = 0, col = "red")
+
+```
+
+Looking at our overall residual plot, there doesn't seem to be anything unusual. Now, let's look at a qqplot.
+
+``` {r, echo = FALSE}
+
+qqnorm(golfersRemoved1$score - fitted)
+qqline(golfersRemoved1$score - fitted)
+
+```
+
+It seems that for the most part, points follow the line pretty fine for this sample size. However, we see that at larger quantiles, points deviate from the line further. This is expected and due to the low lows and high highs we'd expect from performance in golf.
+
+## Confidence Intervals
+
+Let's take a look at the confidence intervals for mean by strategy:
+
+``` {r, include = FALSE}
+
+library(ggplot2)
+library(dplyr)
+
+```
+
+``` {r, echo = FALSE}
+
+data <- data.frame(golfersRemoved1$Strategy, golfersRemoved1$score)
+names(data) <- c("Strategy", "score")
+
+model <- aov(score ~ Strategy, data = data)
+
+means <- aggregate(score ~ Strategy, data = data, FUN = mean)
+names(means)[2] <- "mean"
+summary_model <- summary(model)
+MSE <- summary_model[[1]]$'Mean Sq'[2]
+df_error <- summary_model[[1]]$Df[2]
+SE <- sqrt(MSE / aggregate(score ~ Strategy, data = data, FUN = length)$score)
+
+alpha <- 0.05
+critical_value <- qt(1 - alpha / 2, df = df_error)
+ci_width <- critical_value * SE
+
+means$lower_ci <- means$mean - ci_width
+means$upper_ci <- means$mean + ci_width
+
+# Plotting
+ggplot(means, aes(x = Strategy, y = mean, ymin = lower_ci, ymax = upper_ci)) +
+  geom_point(size = 4, color = "blue") +
+  geom_errorbar(width = 0.1, color = "black") +
+  labs(title = "Confidence Intervals for Means by Strategy",
+       x = "Strategy",
+       y = "Mean Score") +
+  theme_minimal()
+
+```
+
+Now let's take a look at confidence intervals by a combination of strategy and handicap:
+
+``` {r, echo = FALSE}
+
+data <- data.frame(golfersRemoved1$Strategy, golfersRemoved1$Handicap, golfersRemoved1$score)
+names(data) <- c("Strategy", "Handicap", "score")
+
+model <- aov(score ~ Handicap * Strategy, data = data)
+
+means <- with(data, tapply(score, list(Strategy, Handicap), mean))
+means_df <- as.data.frame(means)
+means_df <- cbind(expand.grid(row.names(means), colnames(means)), means_df)
+colnames(means_df) <- c("Strategy", "Handicap", "mean")
+
+summary_model <- summary(model)
+MSE <- mse
+df_error <- summary_model[[1]]$Df[3]
+
+results <- data %>%
+  group_by(Strategy, Handicap) %>%
+  summarise(
+    mean = mean(score),
+    count = n(),
+    .groups = 'drop'
+  )
+
+SE <- sqrt(MSE / results$count)
+alpha <- 0.05
+critical_value <- qt(1 - alpha / 2, df = df_error)
+ci_width <- critical_value * SE
+
+results$lower_ci <- results$mean - ci_width
+results$upper_ci <- results$mean + ci_width
+
+results$Strategy[results$Strategy == "Aggressive"] <- "Agg"
+results$Strategy[results$Strategy == "Neutral"] <- "Neu"
+results$Strategy[results$Strategy == "Conservative"] <- "Cons"
+
+ggplot(results, aes(x = Strategy, y = mean, fill = Handicap, group = Handicap)) +
+  geom_bar(stat="identity", position=position_dodge(), color="black", fill=c("#FF9999")) +
+  geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0.2, position = position_dodge(width = 0.9)) +
+  labs(title = "Confidence Intervals for Means by Combination of Factors",
+       x = "Strategy Levels",
+       y = "Mean Response") +
+  theme_minimal() +
+  facet_wrap(~Handicap) +
+  ylim(60, 120)
+
+```
+
+This plot shows how confidence intervals differ between combinations. It's an interesting to see how results for 20 handicap golfers differ from those of other golfers. Strategy seems to be more influential at that skill level.
+
+# Results of Experiment 2
+
+``` {r, include = FALSE}
+
+muhat2 <- mean(golfersRemoved2$score)
+
+meanblock2 <- 1:2
+meanblock2[1] <- mean(golfersRemoved2$score[1:12])
+meanblock2[2] <- mean(golfersRemoved2$score[13:24])
+
+meanstrat2 <- 1:3
+meanstrat2[1] <- mean(golfersRemoved2$score[golfersRemoved2$Strategy == "Aggressive"])
+meanstrat2[2] <- mean(golfersRemoved2$score[golfersRemoved2$Strategy == "Neutral"])
+meanstrat2[3] <- mean(golfersRemoved2$score[golfersRemoved2$Strategy == "Conservative"])
+
+```
+
+``` {r, include = FALSE}
+
+mean112 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Aggressive"])
+mean122 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Neutral"])
+mean132 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Conservative"])
+mean212 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Aggressive"])
+mean222 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Neutral"])
+mean232 <- mean(golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Conservative"])
+
+```
+
+``` {r, echo = FALSE}
+
+plot(1:3, c(mean112, mean122, mean132), type = "b", pch = 19, col = "red", xlab = "Strategy (1 = Agg., 2 = Neutral, 3 = Cons.)", ylab = "Average Score", ylim = c(70, 105), main = "Means Plot")
+lines(1:3, c(mean212, mean222, mean232), type = "b", pch = 19, col = "blue")
+legend("topright", legend = c("Hcp 0", "Hcp 10"), col = c("red", "blue"), pch = 19)
+
+```
+
+We have another plot showing the average scores by handicap and strategy. Surprisingly, we see that the average score for the aggressive strategy for 0 handicap golfers went down significantly compared to the first experiment. 
+
+``` {r, include = FALSE}
+
+meanij2 <- c(mean112, mean122, mean132, mean212, mean222, mean232)
+
+ssto <- sum((golfersRemoved2$score - muhat2)**2)
+
+sse <- sum((golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Aggressive"] - meanij2[1])**2) + sum((golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Neutral"] - meanij2[2])**2) + sum((golfersRemoved2$score[golfersRemoved2$Handicap == 0 & golfersRemoved2$Strategy == "Conservative"] - meanij2[3])**2) + sum((golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Aggressive"] - meanij2[4])**2) + sum((golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Neutral"] - meanij2[5])**2) + sum((golfersRemoved2$score[golfersRemoved2$Handicap == 10 & golfersRemoved2$Strategy == "Conservative"] - meanij2[6])**2)
+
+ssa <- 12 * sum((meanblock2 - muhat2)**2)
+ssb <- 8 * sum((meanstrat2 - muhat2)**2)
+
+ssab <- sum((meanij2[1] - meanblock2[1] - meanstrat2[1] + muhat2)**2) + sum((meanij2[2] - meanblock2[1] - meanstrat2[2] + muhat2)**2) + sum((meanij2[3] - meanblock2[1] - meanstrat2[3] + muhat2)**2) + sum((meanij2[4] - meanblock2[2] - meanstrat2[1] + muhat2)**2) + sum((meanij2[5] - meanblock2[2] - meanstrat2[2] + muhat2)**2) + sum((meanij2[6] - meanblock2[2] - meanstrat2[3] + muhat2)**2)
+ssab <- 4 * ssab
+
+msa <- ssa / 1
+msb <- ssb / 2
+msab <- ssab / 2
+mse <- sse / 18
+
+```
+
+``` {r, echo = FALSE}
+
+plot(golfersRemoved2$score, col = rep(c("blue", "red", "green"), 12), ylim = c(60, 100), pch = 19, xlab = "Golfer", ylab = "Score", main = "Scores Plot")
+legend("topleft", col = c("red", "blue", "green"), pch = 19, legend = c("Aggressive", "Neutral", "Conservative"))
+abline(v = 12.5, lty = 2)
+
+```
+
+Looking at this plot, we see that 2 of the golfers shot about a 66. These are very good scores, and the lowest scores out of both of our experiments. Perhaps this approach is worthwhile to consider at this skill level.
+
+## Test for Interaction
+
+``` {r}
+
+msab/mse
+
+qf(p = 0.0167, df1 = 2, df2 = 18, lower.tail = FALSE)
+
+```
+
+The test for interaction effects is not significant in our 2nd experiment.
+
+## Test for Handicap
+
+``` {r}
+
+msa/mse
+
+qf(p = 0.0167, df1 = 1, df2 = 18, lower.tail = FALSE)
+
+```
+
+Handicap is still a very significant factor in regards to score.
+
+## Test for Strategy
+
+``` {r}
+
+msb/mse
+
+qf(p = 0.0167, df1 = 2, df2 = 18, lower.tail = FALSE)
+
+```
+
+Surprisingly, this time, the strategy is not a significant factor in regards to score at our p-value of 0.05 / 3. This likely has to do with the 2 low scores that were shot in the aggressive group by the 0 handicap golfers. This just shows how variable golf can be; results from last experiment with 0 handicap golfers were much different.
+
+## Source of Variation Table
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Source & SS & df & MS \\
+\hline
+Handicap & 816.67 & 1 & 816.67 \\
+\hline
+Strategy & 133.58 & 2 & 66.79 \\
+\hline
+Interaction & 111.58 & 2 & 55.79 \\
+\hline
+Error & 275.5 & 18 & 25.31 \\
+\hline
+Total & 1337.33 & 23 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+# Takeaways
+
+For 20 Handicap golfers, an aggressive approach is problematic. There’s lots of talk online about this, but the fact is that a significant reason these golfers shoot the scores they do is because of the trouble they get into with tee shots - those penalty shots really add up. Instead of trying to smash driver, newer golfers should focus on keeping it in play first and practicing other parts of their game. Even for 10 handicap golfers, we have a similar story, just not as amplified. Aggression just doesn’t produce adequate results at that skill level - risk/reward, but the risk is way greater than the reward. And, 0 handicap golfers can score well with any strategy. We saw from our results that aggression yielded the highest scores for these golfers but also the lowest scores. If a golfer of this skill level is feeling good, this experiment shows that being aggressive could definitely pay off. However, the neutral/conservative approach at this level is still going to produce some pretty consistent and solid results. Overall, strategy of the tee matters, but it matters a lot more for high handicap golfers. Only golfers near that 0 handicap level should even consider the aggressive strategy off the tee if they care about minimizing score.
