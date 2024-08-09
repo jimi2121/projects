@@ -1,0 +1,516 @@
+---
+title: "Closing the Gap: Exploring Gender Pay Disparities with Regression"
+author: "Jimi Abbott, Alan Liu, Aditi Raju"
+date: "2023-04-09"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+library(maps)
+library(usmap)
+library(maptools)
+library(magrittr)
+library(glmnet)
+library(dplyr)
+library(forecast)
+library(tidymodels)
+library(greybox)
+
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+CPS <- read.csv("C:/Users/tacom/Downloads/CurrentPopulationSurvey.csv")
+
+CPS_modern <- subset(CPS, year > 2000)
+
+# subset data to be from years 2007 - 2013
+
+```
+
+# Introduction to the Dataset
+
+``` {r, include = FALSE, echo = TRUE}
+
+CPS_modern_m <- CPS_modern$incwage[CPS_modern$sex == 1]
+
+CPS_modern_f <- CPS_modern$incwage[CPS_modern$sex == 2]
+
+hist_m <- hist(CPS_modern_m, col = "red", xlim = c(0, 200000), breaks = 200)
+
+hist_f <- hist(CPS_modern_f, col = "blue", xlim = c(0, 200000), breaks = 200)
+
+# histograms by income for each of the two genders, making them so we can combine them
+
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+plot(hist_m, col = alpha("blue", 0.5), xlim = c(0, 200000), xlab = "Income", ylim = c(0, 15000), main = "Histogram of Incomes by Gender")
+plot(hist_f, col = alpha("red", 0.5), xlim = c(0, 200000), add = TRUE)
+legend("topright", legend = c("Male", "Female"), col = c(alpha("blue", 0.5), alpha("red", 0.5)), lty = c(1, 1), lwd = c(3, 3))
+
+# combining two histograms so we can see the tea!
+
+```
+
+``` {r, include = FALSE, echo = TRUE}
+cps_data <- read.csv("C:/Users/tacom/Downloads/CurrentPopulationSurvey.csv")
+n <- 344287
+m <- 234
+year <- cps_data$year
+incwage <- cps_data$incwage
+
+# last year
+count2013 <- 0
+for (i in 1:n) {
+  count2013 <- count2013 + ifelse(year[i] == 2013, 1, 0)
+}
+incwage2013 <- matrix(data=NA, ncol=count2013)
+count2013 <- 0
+for (i in 1:n) {
+  if (year[i] == 2013) {
+    incwage2013[count2013] <- incwage[i]
+    count2013 <- count2013 + 1
+  }
+}
+options(scipen=999)
+hist(incwage2013, xlim=c(0, 400000), breaks="Scott")
+
+# last 10 years
+countlast10 <- 0
+for (i in 1:n) {
+  countlast10 <- countlast10 + ifelse(year[i] >= 2004, 1, 0)
+}
+incwagelast10 <- matrix(data=NA, ncol=countlast10)
+countlast10 <- 0
+for (i in 1:n) {
+  if (year[i] >= 2004) {
+    incwagelast10[countlast10] <- incwage[i]
+    countlast10 <- countlast10 + 1
+  }
+}
+options(scipen=999)
+hist(incwagelast10, xlim=c(0, 400000), breaks="Scott")
+
+
+# MLR (11 regressors) + step to find optimized model
+count <- 0
+for (i in 1:n) {
+  if (cps_data$year[i] >= 1980) {
+    count <- count + 1
+  }
+}
+metro <- matrix(data=NA, nrow=count)
+pernum <- matrix(data=NA, nrow=count)
+wtsupp <- matrix(data=NA, nrow=count)
+age <- matrix(data=NA, nrow=count)
+sex <- matrix(data=NA, nrow=count)
+race <- matrix(data=NA, nrow=count)
+marst <- matrix(data=NA, nrow=count)
+sch <- matrix(data=NA, nrow=count)
+wkswork1 <- matrix(data=NA, nrow=count)
+union <- matrix(data=NA, nrow=count)
+ftype <- matrix(data=NA, nrow=count)
+incwage <- matrix(data=NA, nrow=count)
+count <- 1
+for (i in 1:n) {
+  if (cps_data$year[i] >= 1980) {
+    metro[count] <- ifelse(is.na(cps_data$metro[i]), 2.5, cps_data$metro[i])
+    pernum[count] <- cps_data$pernum[i]
+    wtsupp[count] <- cps_data$wtsupp[i]
+    age[count] <- cps_data$age[i]
+    sex[count] <- cps_data$sex[i]
+    race[count] <- cps_data$race[i]
+    marst[count] <- cps_data$marst[i]
+    sch[count] <- cps_data$sch[i]
+    wkswork1[count] <- cps_data$wkswork1[i]
+    union[count] <- cps_data$union[i]
+    ftype[count] <- cps_data$ftype[i]
+    incwage[count] <- cps_data$incwage[i]
+    count <- count + 1
+  }
+}
+
+mlr_df <- matrix(data=c(rep(c(1), times=count-1), metro, pernum, wtsupp, age,
+                        sex, race, marst, sch, wkswork1, union, ftype, incwage), 
+                   nrow=count-1, ncol=13)
+mlr_df <- as.data.frame(mlr_df)
+colnames(mlr_df) <- c("ones", "metro", "pernum", "wtsupp", "age", "sex", "race",
+                      "marst", "sch", "wkswork1", "union", "ftype", "incwage")
+
+xmat_mlr <- matrix(data=c(mlr_df[,1:12]), nrow=count-1, ncol=12)
+y_mlr <- matrix(data=c(mlr_df[,13]), nrow=count-1, ncol=1)
+                
+mlr <- lm(log(y_mlr) ~ metro + pernum + wtsupp + age + sex + race + marst + sch +
+            wkswork1 + union + ftype)
+summary(mlr)
+
+backAIC <- step(mlr, direction="backward", data=mlr_df)
+
+mlr_optimized <- lm(log(y_mlr) ~ metro + pernum + age + sex + race + marst + sch +
+                      wkswork1 + union)
+summary(mlr_optimized)
+
+
+# Heat map for sex vs. other regressors
+library(ggplot2)
+colnames(mlr_df) <- c("ones", "Metro. Status", "Person No. on Census",
+                      "Weight Supp.", "Age", "Sex", "Race",
+                      "Marital Status", "Education",
+                      "Work Wks/Yr", "Union Status",
+                      "Family Type", "Wage Income")
+cormat <- round(cor(mlr_df[,c(2:10,12)]),2)
+library(reshape2)
+melted_cormat <- melt(cormat)
+colnames(melted_cormat) <- c("Var1", "Var2", "Correlation")
+library(hrbrthemes)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=Correlation),
+       cex.main=1.25, cex.lab=0.5) +
+  ggtitle("Correlation Between Regressors") +
+  geom_tile() +
+  scale_fill_gradient(low="lavender", high="mediumpurple1") +
+  # theme_ipsum() +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))
+
+
+# SLR for income vs. gender
+slr_sex <- lm(y_mlr ~ sex)
+plot(sex, y_mlr, xlab="Sex", ylab="Income", main="Income vs. Sex")
+abline(slr_sex$coefficients[1], slr_sex$coefficients[2])
+
+
+## SLR for income vs. education level
+y_male <- matrix(data=NA, nrow=175911, ncol=1)
+y_female <- matrix(data=NA, nrow=168376, ncol=1)
+sch_male <- matrix(data=NA, nrow=175911, ncol=1)
+sch_female <- matrix(data=NA, nrow=168376, ncol=1)
+male_count <- 1
+female_count <- 1
+for (i in 1:n) {
+  if (cps_data$sex[i] == 1) {
+    y_male[male_count] <- cps_data$incwage[i]
+    sch_male[male_count] <- cps_data$sch[i]
+    male_count <- male_count + 1
+  }
+  else {
+    y_female[female_count] <- cps_data$incwage[i]
+    sch_female[female_count] <- cps_data$sch[i]
+    female_count <- female_count + 1
+  }
+}
+
+slr_sch_male <- lm(y_male ~ sch_male)
+slr_sch_female <- lm(y_female ~ sch_female)
+
+# Comprehensive plot
+slr_sch <- lm(y_mlr ~ sch)
+plot(sch, y_mlr, xlab="Education Level", ylab="Income", main="Income vs. Education Level")
+abline(slr_sch_male$coefficients[1], slr_sch_male$coefficients[2], col="blue")
+abline(slr_sch_female$coefficients[1], slr_sch_female$coefficients[2], col="red")
+
+# Semi-scaled plot
+slr_sch <- lm(y_mlr ~ sch)
+plot(sch, y_mlr, xlab="Education Level", ylab="Income", 
+     main="Income vs. Education Level", ylim=c(0, 450000))
+abline(slr_sch_male$coefficients[1], slr_sch_male$coefficients[2], col="blue")
+abline(slr_sch_female$coefficients[1], slr_sch_female$coefficients[2], col="red")
+
+# Scaled plot
+slr_sch <- lm(y_mlr ~ sch)
+plot(sch, y_mlr, xlab="Education Level", ylab="Income", 
+     main="Income vs. Education Level", ylim=c(-30000, 150000))
+abline(slr_sch_male$coefficients[1], slr_sch_male$coefficients[2], col="blue")
+abline(slr_sch_female$coefficients[1], slr_sch_female$coefficients[2], col="red")
+
+# RESULTS: male slope = 5990.46, female slope = 4526.11
+male_beta1 <- slr_sch_male$coefficients[2]
+female_beta1 <- slr_sch_female$coefficients[2]
+
+
+## SLR for income vs. education level with outliers removed
+count <- 0
+male_count <- 0
+female_count <- 0
+for (i in 1:n) {
+  if (cps_data$incwage[i] / cps_data$sch[i] <= 10000) {
+    count <- count + 1
+    if (cps_data$sex[i] == 1) {
+      male_count <- male_count + 1
+    }
+    else {
+      female_count <- female_count + 1
+    }
+  }
+}
+y_no_outliers <- matrix(data=NA, nrow=count, ncol=1)
+sch_no_outliers <- matrix(data=NA, nrow=count, ncol=1)
+count <- 1
+for (i in 1:n) {
+  if (cps_data$incwage[i] / cps_data$sch[i] <= 10000) {
+    y_no_outliers[count] <- cps_data$incwage[i]
+    sch_no_outliers[count] <- cps_data$sch[i]
+    count <- count + 1
+  }
+}
+
+y_male <- matrix(data=NA, nrow=male_count, ncol=1)
+y_female <- matrix(data=NA, nrow=female_count, ncol=1)
+sch_male <- matrix(data=NA, nrow=male_count, ncol=1)
+sch_female <- matrix(data=NA, nrow=female_count, ncol=1)
+male_count <- 1
+female_count <- 1
+for (i in 1:n) {
+  if (cps_data$incwage[i] / cps_data$sch[i] <= 10000) {
+    if (cps_data$sex[i] == 1) {
+      y_male[male_count] <- cps_data$incwage[i]
+      sch_male[male_count] <- cps_data$sch[i]
+      male_count <- male_count + 1
+    }
+    else {
+      y_female[female_count] <- cps_data$incwage[i]
+      sch_female[female_count] <- cps_data$sch[i]
+      female_count <- female_count + 1
+    }
+  }
+}
+
+slr_sch_male <- lm(y_male ~ sch_male)
+slr_sch_female <- lm(y_female ~ sch_female)
+
+slr_sch <- lm(y_no_outliers ~ sch_no_outliers)
+plot(sch_no_outliers, y_no_outliers, xlab="Education Level", ylab="Income", 
+     main="Income vs. Education Level (No outliers)", ylim=c(-30000, 150000))
+abline(slr_sch_male$coefficients[1], slr_sch_male$coefficients[2], col="blue")
+abline(slr_sch_female$coefficients[1], slr_sch_female$coefficients[2], col="red")
+
+# RESULTS: male slope = 4686.43, female slope = 4222.27
+male_beta1_no_outliers <- slr_sch_male$coefficients[2]
+female_beta1_no_outliers <- slr_sch_female$coefficients[2]
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+fips <- unique(CPS_modern$statefip)
+fips_wage <- 1:51
+i <- 1
+
+for(value in fips) {
+  fips_w <- subset(CPS_modern, statefip == value)
+  fips_wage[i] <- mean(fips_w$incwage)
+  i <- i + 1
+}
+
+# organizing state data to plot map
+
+fips <- as.character(fips)
+fips[1] = "05"
+fips[6] = "06"
+fips[15] = "01"
+fips[18] = "02"
+fips[24] = "09"
+fips[31] = "08"
+fips[45] = "04"
+
+# changing into character fip values
+
+state_data <- data.frame(fips = fips, values = fips_wage)
+
+plot_usmap(data = state_data, color = "magenta") +
+  labs(title = "Average Income by States") +
+  scale_fill_continuous(low = "white", high = "magenta", name = "Average Income", label = scales::comma) + theme(legend.position = "right")
+
+for(value in fips) {
+  fips_w <- subset(CPS_modern, statefip == value)
+  fips_wage <- mean(fips_w$incwage)
+  CPS_modern$statefip[CPS_modern$statefip == value] <- fips_wage 
+}
+
+# recoding state column so state values are correlated to the amount of money
+# an average person from them makes
+
+occc <- unique(CPS_modern$occ)
+occ_wage <- 1:563
+for (val in occc) {
+  occ_w <- subset(CPS_modern, occ == val)
+  occ_wage <- mean(occ_w$incwage)
+  CPS_modern$occ[CPS_modern$occ == val] <- occ_wage
+}
+
+# doing the same thing for occupation
+
+indd <- unique(CPS_modern$ind)
+ind_wage <- 1:264
+for (val in indd) {
+  ind_w <- subset(CPS_modern, ind == val)
+  ind_wage <- mean(ind_w$incwage)
+  CPS_modern$ind[CPS_modern$ind == val] <- ind_wage
+}
+
+# doing the same thing for industry
+
+privsec <- ifelse(CPS_modern$classwkr == 21, 1, 0)
+fedgov <- ifelse(CPS_modern$classwkr == 25, 1, 0)
+stgov <- ifelse(CPS_modern$classwkr == 27, 1, 0)
+locgov <- ifelse(CPS_modern$classwkr == 28, 1, 0)
+famw <- ifelse(CPS_modern$classwkr == 29, 1, 0)
+
+# making a 0/1 variable for each of the 5 types of worker classes
+
+primfam <- ifelse(CPS_modern$ftype == 1, 1, 0)
+nonfam <- ifelse(CPS_modern$ftype == 2, 1, 0)
+relfam <- ifelse(CPS_modern$ftype == 3, 1, 0)
+unfam <- ifelse(CPS_modern$ftype == 4, 1, 0)
+secfam <- ifelse(CPS_modern$ftype == 5, 1, 0)
+
+# making a 0/1 variable for each of the family types
+
+regionn <- unique(CPS_modern$region)
+region_wage <- 1:9
+for (val in regionn) {
+  region_w <- subset(CPS_modern, region == val)
+  region_wage <- mean(region_w$incwage)
+  CPS_modern$region[CPS_modern$region == val] <- region_wage
+}
+
+# recoding region column so region values are correlated to the amount of money
+# an average person from them makes
+
+nou <- ifelse(CPS_modern$union == 0, 1, 0)
+nocov <- ifelse(CPS_modern$union == 1, 1, 0)
+u <- ifelse(CPS_modern$union == 2, 1, 0)
+covn <- ifelse(CPS_modern$union == 3, 1, 0)
+
+# 0/1 variable for each of the different union types
+
+relatee <- unique(CPS_modern$relate)
+relate_wage <- 1:12
+for (val in relatee) {
+  relate_w <- subset(CPS_modern, relate == val)
+  relate_wage <- mean(relate_w$incwage)
+  CPS_modern$relate[CPS_modern$relate == val] <- relate_wage
+}
+
+# recoding relationship column so values are correlated to the amount of money
+# an average person from them makes
+
+met1 <- ifelse(CPS_modern$metro == 1, 1, 0)
+met2 <- ifelse(CPS_modern$metro == 2, 1, 0)
+met3 <- ifelse(CPS_modern$metro == 3, 1, 0)
+met4 <- ifelse(CPS_modern$metro == 4, 1, 0)
+
+# 0/1 variable for each of the metropolitan statuses
+
+marpres <- ifelse(CPS_modern$marst == 1, 1, 0)
+marabs <- ifelse(CPS_modern$marst == 2, 1, 0)
+sep <- ifelse(CPS_modern$marst == 3, 1, 0)
+div <- ifelse(CPS_modern$marst == 4, 1, 0)
+wid <- ifelse(CPS_modern$marst == 5, 1, 0)
+nev <- ifelse(CPS_modern$marst == 6, 1, 0)
+
+# 0/1 variable for each of the married statuses
+
+```
+
+# SLR Models
+
+``` {r, include = FALSE, echo = TRUE}
+
+x_mff <- ifelse(CPS_modern$sex == 1, 0, 1)
+
+slr_mf <- lm(CPS_modern$incwage ~ x_mff)
+
+plot(x_mff, CPS_modern$incwage, ylim = c(0, 200000), xlab = "Gender", ylab = "Income", main = "SLR: Income Onto Gender")
+abline(slr_mf$coefficients[1], slr_mf$coefficients[2], col = "blue")
+
+# slr just comparing gender and income
+
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+CPS_m <- subset(CPS_modern, sex == 1)
+CPS_f <- subset(CPS_modern, sex == 2)
+
+slr_age_m <- lm(CPS_m$incwage ~ CPS_m$age)
+slr_age_f <- lm(CPS_f$incwage ~ CPS_f$age)
+
+plot(CPS_modern$age, CPS_modern$incwage, ylim = c(0, 200000), xlab = "Age", ylab = "Income", main = "SLR: Income Onto Age")
+abline(slr_age_m$coefficients[1], slr_age_m$coefficients[2], col = "blue", lwd = 4)
+abline(slr_age_f$coefficients[1], slr_age_f$coefficients[2], col = "red", lwd = 4)
+legend("topright", legend = c("Male", "Female"), col = c("blue", "red"), lty = c(1, 1), lwd = c(4, 4))
+
+# slr comparing age and income, but two different models for each gender
+
+```
+
+# MLR Model
+
+``` {r, include = FALSE, echo = TRUE}
+
+full_model_m <- lm(log(CPS_modern$incwage) ~ log(CPS_modern$statefip) + CPS_modern$age + x_mff + poly(CPS_modern$race, 2, raw = TRUE) + CPS_modern$sch + log(CPS_modern$occ) + CPS_modern$ind + CPS_modern$wkswork1 + CPS_modern$hrswork + primfam + nonfam + relfam + unfam + secfam + CPS_modern$annhrs + CPS_modern$ft + CPS_modern$inflate + privsec + fedgov + stgov + locgov + famw + CPS_modern$region + CPS_modern$potexp + poly(CPS_modern$sex * CPS_modern$age, 4, raw = TRUE) + nou + nocov + u + covn + CPS_modern$relate + met1 + met2 + met3 + met4 + marpres + marabs + sep + div + wid + nev)
+summary(full_model_m)
+
+# Multiple linear regression woooo
+
+# double direction stepwise BIC selection
+
+stepBIC <- stats::step(full_model_m, direction = "both", trace = FALSE, k = log(211746), data = CPS_modern)
+summary(stepBIC)
+
+```
+
+
+``` {r, include = FALSE, echo = TRUE}
+
+regressors <- c("gender", "occ", "ind", "WksWrk", "Hrsprweek", "Hrspryear", "Empst", "Inflate", "Region", "Potexp", "Age*Sex")
+
+t_r <- c(29.42, 156.05, 63.01, 143.5, 33.41, 81.35, 87.45, 33.76, 40.4, 34.97, 30.85)
+
+# Visualizing the most significant regressors
+
+par(las = 2)
+
+barplot(t_r, main = "Regressor Distribution",  names.arg = regressors, las = 2, col = "blue", ylab = "t-value")
+
+```
+
+``` {r, include = FALSE, echo = TRUE}
+
+# residual analysis!!!!
+
+plot(stepBIC$fitted.values, stepBIC$residuals, main = "Scatterplot of Residuals", xlab = "x", ylab = "Residuals", cex = .25)
+
+hist(stepBIC$residuals, breaks = "Scott", main = "Histogram of Residuals", xlab = "Residuals")
+
+qqnorm(stepBIC$residuals)
+qqline(stepBIC$residuals)
+
+```
+
+# Logistic Regression
+
+``` {r, include = FALSE, echo = TRUE}
+
+logistic_model <- glm(x_mff ~ CPS_modern$incwage + CPS_modern$statefip + CPS_modern$age + CPS_modern$race + CPS_modern$sch + CPS_modern$occ + CPS_modern$ind + CPS_modern$wkswork1 + CPS_modern$hrswork + primfam + nonfam + relfam + unfam + secfam + CPS_modern$annhrs + CPS_modern$ft + privsec + fedgov + stgov + locgov + famw + CPS_modern$region + CPS_modern$potexp + nou + nocov + u + covn + CPS_modern$relate + marpres + marabs + met1 + met2 + sep + div + wid + nev)
+summary(logistic_model)
+
+CPS_moderns <- subset(CPS_modern, hrswork != 0)
+CPS_moderns <- subset(CPS_moderns, metro != 0)
+
+# subsetting to remove NA values
+
+x_mf <- ifelse(CPS_moderns$sex == 1, 0, 1)
+
+gender_pred <- ifelse(logistic_model$fitted.values > 0.5, 1, 0)
+
+accuracy <- (211780 - sum(abs(as.numeric(gender_pred) - as.numeric(x_mf))))/211780
+
+# let's see the accuracy woooooo
+
+```
