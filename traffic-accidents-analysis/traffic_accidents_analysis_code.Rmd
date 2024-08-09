@@ -1,0 +1,391 @@
+---
+title: "Understanding Traffic Accidents in the United States"
+author: "Christian Steinhofer, Jimi Abbott, Jerry Cai, Jessica Duan"
+output: pdf_document
+fontsize: 10pt
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r, warning = FALSE, message = FALSE}
+library(knitr) 
+library(RSQLite)
+library(tidyverse)
+library(tsutils)
+library(xts)
+library(forecast)
+library(lubridate)
+library(sf)
+library(readxl)
+library(tidytext)
+library(scales)
+library(viridis)
+library(data.table)
+library(grid)
+library(scales)
+library(RColorBrewer) ##colors 
+lcolors<-brewer.pal(4,'RdYlGn')
+library(maps)
+library(usmap)
+library(maptools)
+data1 <- dbConnect(SQLite(), dbname = "C:/Users/tacom/Downloads/stat_405_grp_data.db")
+```
+
+# Dateset Introduction
+
+The US Bureau of Transportation Statistics estimates that there were roughly 276 million registered highway vehicles in the US in 2019. In these vehicles Americans traveled over 3 trillion miles that same year. However, one effect of high automobile usage is a large number of traffic accidents and crashes: about 7 million in 2019. With that, we did research on US accidents and found a nationwide traffic accident dataset which contains details about car accidents in 49 states of the United States. The dataset contains information that was collected from February 2016 to December 2020. The data are collected through multiple APIs which are captured by institutions such as US and state departments of transportation. Our goal is to understand reasons that cause the accidents and variables that correlate with the severity of the accidents, which is key to further application such as predicting car accidents and the effect that it may have.
+
+```{r, include = FALSE, echo = FALSE}
+car_acc <- fread(file = "C:/Users/tacom/Downloads/US_Accidents_Dec20_updated_3.csv")
+
+accidents_time_count <- car_acc %>% count(interval_of_the_day)
+
+##ggplot(accidents_time_count,aes(x=interval_of_the_day,y=n))+geom_bar(stat="identity")
+
+accidents_count <- car_acc %>% count(startHr)
+accidents_severity <- car_acc %>% group_by(startHr) %>% summarise(mean(Severity))
+accident_sVc <- merge(accidents_count,accidents_severity)
+car_acc$weekday <- as.character(car_acc$weekday)
+```
+
+# Visualization
+
+The dataset contains 47 variables. The first thing we decided to do is to drop values that do not have much relation with severity and number of accidents. There are variables that contains True and False values, and all of them are more than 90% False such as Junction, No_exit. Variables like Civil_Twilight, Nautical_Twilight,Astronomical_Twilight define day and night in different ways but we have the exact time of the accidents and we are able to classify them into more detailed time intervals. After cleaning the dataset, we are left with the time the accidents happened, the severity of the accidents, the location of the accidents including states,high ways,and coordinates, and different weather conditions. We will show visualization of those variables to see if there are any patterns.
+
+## Accidents by Hour
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+ggplot(data = accident_sVc) + 
+  geom_col(mapping=aes(x=startHr, y=n, fill= `mean(Severity)`)) +
+  labs(
+    title = "Accidents by Time of Day",
+    x = "Time (24hr clock)",
+    y = "Count", fill= "Mean Severity\n(1 low to 4 high)")+scale_fill_viridis(option = "C")+theme_classic() + labs(y = "Accidents")
+```
+This is a plot showing the accidents that have occurred in each hour of the day, with the fill color showing the average severity of these accidents with each hour. The very first thing we notice is that most accidents happen during the work day. More specifically, we see that at the start of the work day or when people start driving to work, the number of accidents spike. Then, the next couple of hours they die down, but during lunch break, around 12-2 they spike back up again and keep increasing until the end of the average workday, around 5-6 pm when they start to trend down again. In terms of severity, most time intervals are pretty close together, average being centered around severity level 2 out of 4. Interestingly, the most severe accidents happen very early in the morning, which could be attributed to when driving is most reckless due to either tiredness or other physical factors. Thus, we decide the exact time of the day may be a factor.
+
+## Accidents by Day of the Week
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+g_bottom <- car_acc %>%
+  ggplot(aes(factor(Yonth), fill = weekday)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = c("deepskyblue1", "red", "red","red","red","red", "deepskyblue1"),
+                    name = "Day of the week",
+                    labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")) +
+  guides(fill = guide_legend(nrow = 7)) +
+  scale_x_discrete(labels = c('16','17','18','19','20')) +
+  labs(y = "Count",x = "Year") +
+  scale_y_continuous(labels = unit_format(unit = "K", scale = 1e-03))+theme_classic() + labs(y = "Accidents")
+g_bottom
+```
+Next, we have a plot that shows the total number of accidents for each day by each year.The main thing we’re looking at here is the difference between weekends and weekdays, and more importantly the difference between weekends and workdays. Here, we see that the majority of accidents occur on workdays, during higher stress times because in workdays people need to drive which means that there will be more vehicles on the road and higher probability of accidents.
+
+## Change by Month
+
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+g_top <- car_acc %>%
+  count(Month) %>%
+  ggplot(aes(factor(Month), n)) +
+  geom_line(aes(group = 1)) +
+  geom_point() +
+  labs(y = "Accidents",
+       x = NULL,) +
+  scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May",
+                              "Jun", "Jul", "Aug", "Sep", "Oct",
+                              "Nov", "Dec")) +
+  scale_y_continuous(labels = unit_format(unit = "K", scale = 1e-03))
+
+g_top
+```
+Now, we are inspecting the accidents that are classified into each month. From the plot, we learn that there is a sudden increase from July and August to September, reaching a high spot in November and December,and a sudden decrease in January. We believe that the main reason is because of big holidays including thanksgiving and Christmas along with reopening of schools.
+
+## Change by Year
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+car_acc %>%
+  ggplot(aes(x=factor(Month),group = Yonth)) +
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  labs(y = "Accidents") +
+  facet_wrap(~Yonth,ncol = 3)+
+  scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May",
+                              "Jun", "Jul", "Aug", "Sep", "Oct",
+                              "Nov", "Dec"))+
+  scale_y_continuous(labels = scales::percent)+ theme(axis.text.x = element_text(angle = 45)) + labs(x = "Change by Year", fill = "Month")
+```
+This plot further classified the accidents by month into each year, with the y-axis showing the percentage of accidents that each month takes in each year. For each year, December usually takes about 12 to 15 percent. One uncommon thing we find in this plot is that there are almost no data collected for 2020 July and August. We tend to believe that this is because the COVID hit since the pandemic starts in march 2020 and reaches its peak in July. We also believe that COVID definitely affected the way that the data for accidents was recorded because of how little data there is between July and August. Further, the increase of number of accidents in 2020 November and December are because people have quarantined for a long period of time and finally begin to go out, especially for Thanksgiving and Christmas.
+
+```{r,echo=FALSE,include=FALSE}
+a <- copy(car_acc)
+setDT(a)
+avg_lat1 <- mean(a$Start_Lat[a$Severity == 1])
+avg_lat2 <- mean(a$Start_Lat[a$Severity == 2])
+avg_lat3 <- mean(a$Start_Lat[a$Severity == 3])
+avg_lat4 <- mean(a$Start_Lat[a$Severity == 4])
+avg_lng1 <- mean(a$Start_Lng[a$Severity == 1])
+avg_lng2 <- mean(a$Start_Lng[a$Severity == 2])
+avg_lng3 <- mean(a$Start_Lng[a$Severity == 3])
+avg_lng4 <- mean(a$Start_Lng[a$Severity == 4])
+avg_lat <- c(avg_lat1, avg_lat2, avg_lat3, avg_lat4)
+avg_lng <- c(avg_lng1, avg_lng2, avg_lng3, avg_lng4)
+avg_loc <- data.frame(lon = avg_lng, lat = avg_lat, Severity = c(1, 2, 3, 4))
+avg_loc1 <- usmap_transform(avg_loc)
+```
+
+## Severity Map
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+options(scipen=10000)
+plot_usmap(data = statepop, values = "pop_2015", color = "red") +
+scale_fill_continuous(low = "white", high = "red", name = "Population") +
+geom_point(data = avg_loc1, aes(x = x, y = y, size = Severity),
+
+color = "blue", alpha = 1) +
+labs(title = "Average Location by Severity",
+size = "Severity") +
+theme(legend.position = "right")
+```
+This is the average location of accidents by severity. What stands out about this map is that as the accidents become more severe, their average location moves further northeast. This leads us to believe that this is because colder weather conditions are much more likely to cause worse accidents. But, as we'll see in the next visualization, that might not be the case.
+
+## Relationship with Weather Conditions
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+weather <- car_acc %>% group_by(Severity) %>% count(Weather_Condition) %>% mutate(n = n / sum(n)) %>% filter(n > 0.02)
+weather <- weather$Weather_Condition
+
+c <- car_acc %>%
+  filter(Weather_Condition %in% weather) %>%
+  group_by(Severity) %>%
+  count(Weather_Condition) %>%
+  mutate(n = n / sum(n)) %>%
+  ggplot(aes(reorder_within(Weather_Condition, n, Severity), n)) +
+  geom_col(fill= "#0d0887",show.legend = F) +
+  facet_wrap(~ Severity, scales = "free_y") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(breaks = seq(0, 0.4, 0.1), labels = percent) +
+  labs(x = "Weather Condition",
+       title = "Weather condition lacks impact on accident severity")+theme_classic()
+c
+```
+
+It’s normal for one to think that the severity of the accidents will be closely related to the weather conditions because bad weather such as snowy will cause high severity accidents. The plot is showing the distribution of different weather conditions under different severity levels. By inspecting the plot, the distribution of those weather variables seems similar, which may indicate that weather conditions don’t relate that much in terms of the severity level. After running tests on these variables, the difference in means of severity between accidents with wind speed greater than 30 mph and wind speed less than 30 mph is statistically significant via the t-test: the t-test shows that accidents with wind speed greater than 30 mph have greater severity than those less than 30 mph.
+
+
+## Top 10 states in Accidents
+```{r, echo = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+states_count <- car_acc %>% count(State)
+states_count <- states_count %>% arrange(desc(n)) %>% head(10)
+barplot(states_count$n,
+        main = "Top 10 states",
+        xlab = "states",
+        ylab = "Accidents",
+        names.arg = states_count$State,
+        col = "#d8576b",)
+```
+This is a barplot showing the top 10 states that have the most number of accidents. Since these states take almost 80% of the data, we will focus on these states when doing analysis.
+
+
+# Cars and COVID 
+
+## Secondary Dataset: Miles Driven
+
+With our secondary data set, we wanted to provide some context for the main data set of car accidents by examining the number of miles driven every month. This secondary data set is collected by the U.S. Federal Highway Administration, which includes monthly data for the number of miles driven in the entire U.S from January 2016 to December 2020. We believe that this information will provide better insights into patterns in car accidents. We knew that driving habits decreased in early 2020 due to COVID and lockdowns across the country, and we wanted to be able to better quantify these changes from previous years to understand patterns in the main dataset of accidents.
+
+```{r, warning = FALSE, message = FALSE,out.height= '80%',out.width='80%',fig.align='center' }
+df_1 <- dbSendQuery(conn = data1, "
+SELECT date, miles
+FROM Miles_by_Month
+")
+
+df_01 <- dbFetch(df_1, -1)
+
+df_01$date <- as.Date(df_01$date,
+                        format = "%Y-%m-%d")
+
+ggplot(data = df_01, aes(x = date, y = miles)) +
+      geom_line() +
+      scale_x_date(breaks="6 months", date_labels = "%b-%y") +
+      labs(title = "Miles per Month", x = "Date", y = "Miles")+theme_classic()
+```
+
+
+## Seasonal Trends
+
+Here we see a seasonal trend where the number of miles driven peaks in the summer months of July and August and reaches a low in February. In 2020, things are clearly different, as we notice a large decrease in April of 2020 brought by lockdowns.
+Delving into yearly trends, we see that the number of miles driven each year has been increasing; the red line is 2016, and blue line is 2019. Something interesting about this is that in the first 2 months of 2020, as shown by this purple line, the number of miles driven was much higher than usual. Then, in March and April, there was a decline in the number of miles, and this slowly recovered into the summer of 2020 where it came close to previous years, before declining again in late winter of 2020.
+
+```{r, warning = FALSE, message = FALSE,out.height= '80%',out.width='80%',fig.align='center' }
+ts1 <- ts(df_01$miles, start=c(2016, 1), frequency=12)
+
+seasonplot(ts1, 12, col = rainbow(5), year.labels=TRUE) 
+```
+
+
+## Changes in 2020
+
+This is another way of visualizing changes by looking at the changes from year to year for each month. Here we see that there was a slow growth from 2016 to 2019 for each month. In 2020, these changes were all reversed, with the most drastic decrease in April 2020. The results of statistical testing confirms evidence of seasonality during the yearly period.
+
+```{r, warning = FALSE, message = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+invisible(seasplot(ts1, outplot = 3))
+```
+
+
+## Changes in 2020 
+
+Finally, by examining the differences from month to month, we see that the seasonal trend pattern still remains while accounting for the numbers in 2020.
+
+```{r, warning = FALSE, message = FALSE,out.height= '80%',out.width='80%',fig.align='center'}
+plot(diff(ts1, 1))
+```
+
+
+
+
+---
+```{r}
+model<-maps::map('state', region='.', exact = FALSE, plot = FALSE,fill = TRUE)
+df <- as.data.table(list(long = model$x, lat = model$y, 
+        group = cumsum(is.na(model$x) & is.na(model$y)) + 1, 
+        order = seq_along(model$x)), n = length(model$x))
+names <- do.call("rbind", lapply(strsplit(model$names, 
+    "[:,]"), "[", 1:2))
+df$region <- names[df$group, 1]
+usa<-df[stats::complete.cases(df$lat, df$long), ]
+usa<-usa[region!='district of columbia']
+
+states<-data.table(State=state.abb,state.name=state.name,region=tolower(state.name))
+states<-rbind(states,data.table(State='DC',state.name='District of Columbia',region='district of columbia'))
+usa<-states[usa,on=.(region)]
+#################
+
+dat<-copy(car_acc)
+setDT(dat)
+dat[,start.hour:=hour(Start_Time)]
+dat[,hour.type:=fcase(start.hour<=19 & start.hour>=15,'focus',default='normal')]
+dat[,Severity.color:=lcolors[Severity]]
+
+dat[,Severity.alpha:=rescale(`Wind_Speed.mph.`,from=c(0,30),to=c(0.5,1))]
+dat[`Wind_Speed.mph.`>=30,Severity.alpha:=1]
+
+dat[`Wind_Speed.mph.`==0,Severity.alpha:=1]
+dat[`Wind_Speed.mph.`==0,Severity.color:='blue2']
+
+data.ok<-dat[,.(State,
+                Start_Lng,End_Lng,
+                Start_Lat,End_Lat,
+                Severity,`Wind_Speed.mph.`,
+                hour.type,
+                Severity.color,Severity.alpha)]
+
+data.ok<-data.ok[!is.na(`Wind_Speed.mph.`),]
+
+
+plotone<-function(state.toplot)
+{
+grid.newpage()
+
+pushViewport(viewport(h=0.95,w=0.95,name='original',
+  layout=grid.layout(nrow=1+length(state.toplot),
+  ncol=4,
+  widths=unit.c(unit(rep(1,2),'null'),unit(1.5,'lines'),unit(10,'lines')),
+  heights=unit.c(unit(2,'lines'),unit(rep(5,length(state.toplot)),'null')))))
+
+
+#####
+pushViewport(viewport(layout.pos.col=1,layout.pos.row=1))
+grid.text('Focus Hours (PM3~7)',gp=gpar(fontface=2))
+seekViewport('original')
+pushViewport(viewport(layout.pos.col=2,layout.pos.row=1))
+grid.text('Other Hours',gp=gpar(fontface=2))
+seekViewport('original')
+
+
+for(inter.state in state.toplot)
+{
+     x.range<-usa[State==inter.state,range(long)]
+     y.range<-usa[State==inter.state,range(lat)]
+     usa[State==inter.state]->inter.map
+     
+     ##########
+	 seekViewport('original')
+     pushViewport(viewport(layout.pos.col=1,layout.pos.row=1+match(inter.state,state.toplot)))
+     pushViewport(dataViewport(xData=x.range,yData=y.range,extension=0.02))
+     
+     data.ok[State==inter.state & hour.type=='focus',]->inter.data
+     
+     grid.segments(x0=inter.data[,Start_Lng],
+          x1=inter.data[,End_Lng],
+          y0=inter.data[,Start_Lat],
+          y1=inter.data[,End_Lat],
+          gp=gpar(col=inter.data[,Severity.color],alpah=inter.data[,Severity.alpha]),
+          default.unit='native')
+     
+     grid.polygon(x=inter.map[,long],
+	 y=inter.map[,lat],
+	 id=inter.map[,group],
+	 default.unit='native',gp=gpar(fill='transparent'))
+     
+     ##########
+     seekViewport('original')
+     pushViewport(viewport(layout.pos.col=2,layout.pos.row=1+match(inter.state,state.toplot)))
+     pushViewport(dataViewport(xData=x.range,yData=y.range,extension=0.02))
+     
+     data.ok[State==inter.state & hour.type=='normal',]->inter.data
+     
+     grid.segments(x0=inter.data[,Start_Lng],
+          x1=inter.data[,End_Lng],
+          y0=inter.data[,Start_Lat],
+          y1=inter.data[,End_Lat],
+          gp=gpar(col=inter.data[,Severity.color],alpah=inter.data[,Severity.alpha]),
+          default.unit='native')
+     
+     grid.polygon(x=inter.map[,long],y=inter.map[,lat],id=inter.map[,group],
+	 default.unit='native',gp=gpar(fill='transparent'))
+	 
+	 ##########
+     seekViewport('original')
+	 pushViewport(viewport(layout.pos.col=3,layout.pos.row=1+match(inter.state,state.toplot)))
+	 grid.text(inter.map[,unique(state.name)],rot=-90)
+	 
+}
+     seekViewport('original')
+	 pushViewport(viewport(layout.pos.col=4))
+     
+     grid.text(label='Severity',gp=gpar(fontface=2),x=unit(1,'mm'),y=unit(1,'npc')-unit(1.2,'lines'),just=c('left','top'))
+     leg.color<-legendGrob(gp=gpar(col=lcolors,lty=1,lwd=2.5,lineend='butt'),labels=1:4)
+     leg.color$vp<-viewport(y=unit(1,'npc')-unit(2.2,'lines'),
+                            x=unit(1,'mm'),just=c('left','top'),
+                            height=grobHeight(leg.color),
+                            width=grobWidth(leg.color))
+     grid.draw(leg.color)
+
+
+}
+```
+
+```{r,echo=FALSE,fig.align='center'}
+plotone("CA")
+plotone("FL")
+plotone("OR")
+plotone("NY")
+plotone("MN")
+plotone("TX")
+```
+
+As we have suggests previously, the severity, the exact time in a day, wind speed, and the top number of accidents of state. Our killer plot is a heat map of the top 6 states where the points on the map are the accidents with color showing the severity(1-4), we have divided the plot into the focus hour (3-7 pm) and non-focus hours for the different state to better understand how has time influence the accidents. The points with blue are those accidents that experience wind speed that’s more than 30 mph.
+
+1. From the plot, we can see that most accidents are around level 2 severity and it’s obvious that lots of the accidents are concentrated in big cities, and the points assemble the highways and roads in the state, We can see that high severity accidents tend to happen on the roads that are going out of the city, which correspond our thought that more accidents happened on holidays because people are going out of the cities to go back to home or for traveling.
+
+2. For wind speed, California, Oregon, and Minnesota have a relatively high number of blue points which means that the number of accidents with wind speed higher than 30 mph is more common there, thus location is a factor that affects the occurrence and severity of accidents. 
+
+3. Since we have divided our plot into two different time intervals, we notice that most of the high severity accidents tend to happen outside the focus hour, and we think it's probably because the focus hour did not include the nighttime, focus hour usually would not happen high severity accidents because there are many vehicles and most likely accidents would be scratched or rear-end which is considered low severity.
+
+
+
+## Conclusion
+We have learned interesting things by inspecting the interesting variables that seem to have a great relationship with the number of accidents and the severity of the accidents. Our killer plot shows that the location is a factor that affects the occurrence of the accidents with different states having different weather conditions, One variable we investigate is the wind speed. Accidents usually happen from September to December because of school's reopening, holidays including Thanksgiving and Christmas. We also investigate the COVID influence on the number of car accidents by introducing a secondary dataset of vehicle miles by month with almost the same time interval. We find that with a decrease in vehicle miles there is also a decrease in car accidents in 2020 starting from March to August. During the analysis of the dataset, we have also found some limitations in the primary dataset. The severity level is not clear enough as it can not clearly account for the financial loss and the effect that the accidents may have on the roads. The data for July and August 2020 is missing for a large amount as well.
+
+## Sources
+US car accidents dataset:https://arxiv.org/abs/1906.05409 \\
+
+Vehicle Miles Traveled(US): https://fred.stlouisfed.org/series/TRFVOLUSM227NFWA#0
